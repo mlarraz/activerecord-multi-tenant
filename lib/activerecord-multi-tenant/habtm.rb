@@ -4,47 +4,39 @@
 # It overrides the has_and_belongs_to_many method to add the tenant_id to the join table if the
 # tenant_enabled option is set to true.
 
-module ActiveRecord
-  module Associations
-    module ClassMethods
-      # rubocop:disable Naming/PredicateName
-      def has_and_belongs_to_many_with_tenant(name, options = {}, &extension)
-        # rubocop:enable Naming/PredicateName
-        has_and_belongs_to_many_without_tenant(name, **options, &extension)
+module MultiTenant
+  module HABTM
+    def has_and_belongs_to_many(name, scope = nil, **opts, &extension)
+      tenant_enabled    = opts.delete(:tenant_enabled)
+      tenant_class_name = opts.delete(:tenant_class_name)
+      tenant_column     = opts.delete(:tenant_column)
 
-        middle_reflection = _reflections[name.to_s].through_reflection
-        join_model = middle_reflection.klass
+      super
 
-        # get tenant_enabled from options and if it is not set, set it to false
-        tenant_enabled = options[:tenant_enabled] || false
+      return unless tenant_enabled
 
-        return unless tenant_enabled
+      middle_reflection = _reflections[name.to_s].through_reflection
+      join_model = middle_reflection.klass
 
-        tenant_class_name = options[:tenant_class_name]
-        tenant_column = options[:tenant_column]
+      tenant_field_name = tenant_column.scan(/(\w+)_id/).dig(0, 0) || "tenant"
 
-        match = tenant_column.match(/(\w+)_id/)
-        tenant_field_name = match ? match[1] : 'tenant'
+      join_model.class_eval do
+        belongs_to tenant_field_name.to_sym, class_name: tenant_class_name
+        before_create :tenant_set
 
-        join_model.class_eval do
-          belongs_to tenant_field_name.to_sym, class_name: tenant_class_name
-          before_create :tenant_set
+        private
 
-          private
+        # This method sets the tenant_id on the join table and executes before creation of the join table record.
+        define_method :tenant_set do
+          if tenant_enabled
+            raise MultiTenant::MissingTenantError, "Tenant ID is not set" unless MultiTenant.current_tenant_id
 
-          # This method sets the tenant_id on the join table and executes before creation of the join table record.
-          define_method :tenant_set do
-            if tenant_enabled
-              raise MultiTenant::MissingTenantError, 'Tenant Id is not set' unless MultiTenant.current_tenant_id
-
-              send("#{tenant_column}=", MultiTenant.current_tenant_id)
-            end
+            send("#{tenant_column}=", MultiTenant.current_tenant_id)
           end
         end
       end
-
-      alias has_and_belongs_to_many_without_tenant has_and_belongs_to_many
-      alias has_and_belongs_to_many has_and_belongs_to_many_with_tenant
     end
   end
 end
+
+ActiveRecord::Associations::ClassMethods.prepend(MultiTenant::HABTM)

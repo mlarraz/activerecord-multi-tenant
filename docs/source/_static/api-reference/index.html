@@ -57,29 +57,30 @@
         <div class="clear"></div>
       </div>
 
-      <div id="content"><div id='filecontents'>
-<h1 id="label-activerecord-multi-tenant++rdoc-image-3Ahttps-3A-2F-2Fimg.shields.io-2Fgem-2Fv-2Factiverecord-multi-tenant.svg++rdoc-image-3Ahttps-3A-2F-2Fimg.shields.io-2Fgem-2Fdt-2Factiverecord-multi-tenant.svg">activerecord-multi-tenant <a href="https://rubygems.org/gems/activerecord-multi-tenant"> rdoc-image:https://img.shields.io/gem/v/activerecord-multi-tenant.svg</a> <a href="https://rubygems.org/gems/activerecord-multi-tenant"> rdoc-image:https://img.shields.io/gem/dt/activerecord-multi-tenant.svg</a></h1>
+      <div id="content"><div id='filecontents'><h1 id="activerecord-multi-tenant">activerecord-multi-tenant</h1>
 
-<p>Introduction Post: <a href="https://www.citusdata.com/blog/2017/01/05/easily-scale-out-multi-tenant-apps">www.citusdata.com/blog/2017/01/05/easily-scale-out-multi-tenant-apps</a>/</p>
+<p><a href="https://github.com/citusdata/activerecord-multi-tenant/actions/workflows/active-record-multi-tenant-tests.yml"><img src="https://github.com/citusdata/activerecord-multi-tenant/actions/workflows/active-record-multi-tenant-tests.yml/badge.svg" alt="Build Status"></a> <a href="https://codecov.io/gh/citusdata/activerecord-multi-tenant"><img src="https://codecov.io/gh/citusdata/activerecord-multi-tenant/branch/master/graph/badge.svg?token=rw0TsEk4Ld" alt="codecov"></a> <a href="https://rubygems.org/gems/activerecord-multi-tenant"> <img src="https://img.shields.io/gem/v/activerecord-multi-tenant.svg" alt="Gems Version"></a><a href="https://rubygems.org/gems/activerecord-multi-tenant"> <img src="https://img.shields.io/gem/dt/activerecord-multi-tenant.svg" alt="Gem Download Count"></a> <a href="https://activerecord-multi-tenant.readthedocs.io/en/latest/?badge=latest"><img src="https://readthedocs.org/projects/activerecord-multi-tenant/badge/?version=latest" alt="Documentation Status"></a> </p>
+
+<p>Introduction Post: <a href="https://www.citusdata.com/blog/2017/01/05/easily-scale-out-multi-tenant-apps/">https://www.citusdata.com/blog/2017/01/05/easily-scale-out-multi-tenant-apps/</a></p>
 
 <p>ActiveRecord/Rails integration for multi-tenant databases, in particular the open-source <a href="https://github.com/citusdata/citus">Citus</a> extension for PostgreSQL.</p>
 
 <p>Enables easy scale-out by adding the tenant context to your queries, enabling the database (e.g. Citus) to efficiently route queries to the right database node.</p>
 
-<h2 id="label-Installation">Installation</h2>
+<h2 id="installation">Installation</h2>
 
 <p>Add the following to your Gemfile:</p>
 
 <pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_gem'>gem</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>activerecord-multi-tenant</span><span class='tstring_end'>&#39;</span></span>
 </code></pre>
 
-<h2 id="label-Supported+Rails+versions">Supported Rails versions</h2>
+<h2 id="supported-rails-versions">Supported Rails versions</h2>
 
 <p>All Ruby on Rails versions starting with 6.0 or newer (up to 7.0) are supported.</p>
 
 <p>This gem only supports ActiveRecord (the Rails default ORM), and not alternative ORMs like Sequel.</p>
 
-<h2 id="label-Usage">Usage</h2>
+<h2 id="usage">Usage</h2>
 
 <p>It is required that you add <code>multi_tenant</code> definitions to your model in order to have full support for Citus, in particular when updating records.</p>
 
@@ -124,40 +125,46 @@
 <span class='kw'>end</span>
 </code></pre>
 
-<h2 id="label-Rolling+out+activerecord-multi-tenant+for+your+application+-28write-only+mode-29">Rolling out activerecord-multi-tenant for your application (write-only mode)</h2>
+<h2 id="rolling-out-activerecord-multi-tenant-for-your-application-write-only-mode">Rolling out activerecord-multi-tenant for your application (write-only mode)</h2>
 
-<p>The library relies on tenant_id to be present and NOT NULL for all rows. However, its often useful to have the library set the tenant_id for new records, and then backfilling tenant_id for existing records as a background task.</p>
+<p>The library relies on tenant_id to be present and NOT NULL for all rows. However,
+its often useful to have the library set the tenant_id for new records, and then backfilling
+tenant_id for existing records as a background task.</p>
 
-<p>To support this, there is a write-only mode, in which tenant_id is not included in queries, but only set for new records. Include the following in an initializer to enable it:</p>
+<p>To support this, there is a write-only mode, in which tenant_id is not included in queries,
+but only set for new records. Include the following in an initializer to enable it:</p>
 
 <pre class="code ruby"><code class="ruby"><span class='const'><span class='object_link'><a href="MultiTenant.html" title="MultiTenant (module)">MultiTenant</a></span></span><span class='period'>.</span><span class='id identifier rubyid_enable_write_only_mode'><span class='object_link'><a href="MultiTenant.html#enable_write_only_mode-class_method" title="MultiTenant.enable_write_only_mode (method)">enable_write_only_mode</a></span></span>
 </code></pre>
 
 <p>Once you are ready to enforce tenancy, make your tenant_id column NOT NULL and simply remove that line.</p>
 
-<h2 id="label-Frequently+Asked+Questions">Frequently Asked Questions</h2>
-<ul><li>
-<p><strong>What if I have a table that doesn’t relate to my tenant?</strong> (e.g. templates that are the same in every account)</p>
-</li></ul>
+<h2 id="frequently-asked-questions">Frequently Asked Questions</h2>
+
+<ul>
+<li><strong>What if I have a table that doesn&#39;t relate to my tenant?</strong> (e.g. templates that are the same in every account)</li>
+</ul>
 
 <p>We recommend not using activerecord-multi-tenant on these tables. In case only some records in a table are not associated to a tenant (i.e. your templates are in the same table as actual objects), we recommend setting the tenant_id to 0, and then using MultiTenant.with(0) to access these objects.</p>
-<ul><li>
-<p><strong>What if my tenant model is not defined in my application?</strong></p>
-</li></ul>
+
+<ul>
+<li><strong>What if my tenant model is not defined in my application?</strong></li>
+</ul>
 
 <p>The tenant model does not have to be defined. Use the gem as if the model was present. <code>MultiTenant.with</code> accepts either a tenant id or model instance.</p>
 
-<h2 id="label-Credits">Credits</h2>
+<h2 id="credits">Credits</h2>
 
 <p>This gem was initially based on <a href="https://github.com/ErwinM/acts_as_tenant">acts_as_tenant</a>, and still shares some code. We thank the authors for their efforts.</p>
 
-<h2 id="label-License">License</h2>
+<h2 id="license">License</h2>
 
-<p>Copyright © 2018, Citus Data Inc.<br> Licensed under the MIT license, see LICENSE file for details.</p>
+<p>Copyright (c) 2018, Citus Data Inc.<br>
+Licensed under the MIT license, see LICENSE file for details.</p>
 </div></div>
 
       <div id="footer">
-  Generated on Sat May 27 10:16:23 2023 by
+  Generated on Tue Jul 25 16:34:05 2023 by
   <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.34 (ruby-3.2.2).
 </div>

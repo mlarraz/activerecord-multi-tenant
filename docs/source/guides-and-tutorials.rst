@@ -87,8 +87,8 @@ not scope the association to the current tenant.
     class Manager < ActiveRecord::Base
       multi_tenant :account
       belongs_to :project
-      has_and_belongs_to_many :tasks, { tenant_column: :account_id, tenant_enabled: true,
-                                        tenant_class_name: 'Account' }
+      has_and_belongs_to_many :tasks, tenant_column: :account_id, tenant_enabled: true,
+                                      tenant_class_name: 'Account'
     end
 
     # Tests to check if the tenant column is set correctly
